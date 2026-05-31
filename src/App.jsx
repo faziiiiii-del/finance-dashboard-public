@@ -557,7 +557,10 @@ function ZakatTab({ assets, pkrRate, pkrLoading }) {
   const [pkrAccountInput, setPkrAccountInput] = useState("");
   const pkrAccountGBP = pkrRate && pkrAccountInput ? parseFloat(pkrAccountInput) / pkrRate : 0;
 
-  const cashAccounts = assets.filter((a) => a.name.toLowerCase().includes("account"));
+  const cashAccounts = assets.filter((a) => {
+    const n = a.name.toLowerCase();
+    return n.includes("account") || n.includes("current") || n.includes("saving") || n.includes("savings");
+  });
   const investments = assets.filter((a) => a.name.toLowerCase().includes("vanguard") || a.name.toLowerCase().includes("ftse") || a.name.toLowerCase().includes("global"));
   const totalZakatableBase = [...cashAccounts, ...investments].reduce((s, a) => s + a.amount, 0);
   const totalZakatable = totalZakatableBase + pkrAccountGBP;
@@ -1075,7 +1078,7 @@ export default function App() {
   const netWorth = totalAssets - totalLiabilities;
   const totalExpenses = useMemo(() => expenses.reduce((s, a) => s + a.amount, 0), [expenses]);
   const headroom = income - totalExpenses;
-  const readyCash = assets.filter((a) => a.name.toLowerCase().includes("account")).reduce((s, a) => s + a.amount, 0);
+  const readyCash = assets.filter((a) => { const n = a.name.toLowerCase(); return n.includes("account") || n.includes("current") || n.includes("saving") || n.includes("savings"); }).reduce((s, a) => s + a.amount, 0);
   const annualUnbudgeted = annualBills.filter((b) => !b.inBudget).reduce((s, b) => s + b.amount, 0);
 
   useEffect(() => {
