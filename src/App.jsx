@@ -529,13 +529,13 @@ function getHijriDate(date = new Date()) {
   return { day: parts.day, month: parts.month, year: parts.year };
 }
 
-function getNext15Shaban() {
+function getNextHijriDate(targetMonth, targetDay) {
   const today = new Date();
   for (let i = 0; i <= 400; i++) {
     const candidate = new Date(today);
     candidate.setDate(today.getDate() + i);
     const h = getHijriDate(candidate);
-    if (h.month === 8 && h.day === 15) return candidate;
+    if (h.month === targetMonth && h.day === targetDay) return candidate;
   }
   return null;
 }
@@ -549,10 +549,14 @@ const HIJRI_MONTHS = ["","Muharram","Safar","Rabi al-Awwal","Rabi al-Thani","Jum
 
 function ZakatTab({ assets, pkrRate, pkrLoading }) {
   const hijriToday = getHijriDate();
-  const next15Shaban = getNext15Shaban();
-  const days = next15Shaban ? daysUntil(new Date(next15Shaban)) : null;
-  const isZakatDay = hijriToday.month === 8 && hijriToday.day === 15;
   const moon = getMoonPhase();
+
+  const [zakatMonth, setZakatMonth] = useState(8); // Default Sha'ban
+  const [zakatDay, setZakatDay] = useState(15);
+
+  const nextZakatDate = getNextHijriDate(zakatMonth, zakatDay);
+  const days = nextZakatDate ? daysUntil(new Date(nextZakatDate)) : null;
+  const isZakatDay = hijriToday.month === zakatMonth && hijriToday.day === zakatDay;
 
   const [pkrAccountInput, setPkrAccountInput] = useState("");
   const pkrAccountGBP = pkrRate && pkrAccountInput ? parseFloat(pkrAccountInput) / pkrRate : 0;
@@ -579,7 +583,7 @@ function ZakatTab({ assets, pkrRate, pkrLoading }) {
         <div style={{ fontSize: 48, marginBottom: 4 }}>{moon.emoji}</div>
         <div style={{ color: "#6b7280", fontSize: 12, marginBottom: 12 }}>{moon.name} · Day {moon.phase} of lunar cycle</div>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#f9fafb", marginBottom: 4 }}>☪️ Zakat Calculator</div>
-        <div style={{ color: "#6b7280", fontSize: 13 }}>Based on 15th Sha'ban (8th month of Islamic calendar)</div>
+        <div style={{ color: "#6b7280", fontSize: 13 }}>Select your Zakat month and day from the Islamic calendar</div>
       </div>)}
 
       {/* Hijri Date, Countdown, Nisab */}
@@ -590,9 +594,29 @@ function ZakatTab({ assets, pkrRate, pkrLoading }) {
           <div style={{ color: "#6b7280", fontSize: 11, marginTop: 4 }}>{HIJRI_MONTHS[hijriToday.month] || ""}</div>
         </div>
         <div style={{ flex: 1, minWidth: 140, background: "#0b0f1a", borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
-          <div style={{ color: "#6b7280", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{isZakatDay ? "🎯 Zakat Day!" : "Next 15th Sha'ban"}</div>
-          <div style={{ color: isZakatDay ? "#34d399" : "#c084fc", fontSize: 18, fontWeight: 700 }}>{isZakatDay ? "Today!" : days !== null ? `${days} days` : "…"}</div>
-          {next15Shaban && !isZakatDay && <div style={{ color: "#6b7280", fontSize: 11, marginTop: 4 }}>{next15Shaban.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div>}
+          <div style={{ color: "#6b7280", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>My Zakat Date</div>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
+            <select value={zakatMonth} onChange={(e) => setZakatMonth(parseInt(e.target.value))}
+              style={{ background: "#1e2535", border: "1px solid #fbbf24", borderRadius: 6, color: "#fde68a", padding: "4px 6px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
+              {HIJRI_MONTHS.slice(1).map((m, i) => (
+                <option key={i+1} value={i+1}>{m}</option>
+              ))}
+            </select>
+            <select value={zakatDay} onChange={(e) => setZakatDay(parseInt(e.target.value))}
+              style={{ background: "#1e2535", border: "1px solid #fbbf24", borderRadius: 6, color: "#fde68a", padding: "4px 6px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", width: 60 }}>
+              {Array.from({length: 30}, (_, i) => i + 1).map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ color: isZakatDay ? "#34d399" : "#c084fc", fontSize: 16, fontWeight: 700 }}>
+            {isZakatDay ? "🎯 Today!" : days !== null ? `${days} days` : "…"}
+          </div>
+          {nextZakatDate && !isZakatDay && (
+            <div style={{ color: "#6b7280", fontSize: 11, marginTop: 4 }}>
+              {nextZakatDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+            </div>
+          )}
         </div>
         <div style={{ flex: 1, minWidth: 140, background: "#0b0f1a", borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
           <div style={{ color: "#6b7280", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Nisab</div>
