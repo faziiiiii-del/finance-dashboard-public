@@ -647,7 +647,7 @@ function AnnualBillRow({ item, onUpdate, onDelete, currency, rates }) {
       </td>
       <td style={{ padding: "10px 10px" }}>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={startEdit} style={btn("#3b82f6")}>✎</button>
+          <button onClick={startEditBill} style={btn("#3b82f6")}>✎</button>
           <button onClick={() => onDelete(item.id)} style={btn("#ef4444")}>✕</button>
         </div>
       </td>
