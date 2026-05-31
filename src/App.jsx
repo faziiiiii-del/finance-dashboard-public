@@ -1167,13 +1167,39 @@ export default function App() {
               )}
             </div>
             <button onClick={() => {
-              const d = { monthlyIncome: income, assets, liabilities, expenses, annualBills, exportedAt: new Date().toISOString() };
+              const d = { monthlyIncome: income, assets, liabilities, expenses, annualBills, vanguardUnits, homeValue, mortgageRate, exportedAt: new Date().toISOString() };
               const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url; a.download = `financial-backup-${new Date().toISOString().split("T")[0]}.json`; a.click();
               URL.revokeObjectURL(url);
             }} style={{ ...btnStyle("#34d399"), padding: "10px 16px", fontSize: 13 }}>⬇ Export</button>
+            <label style={{ background: "#60a5fa22", border: "1px solid #60a5fa", color: "#60a5fa", borderRadius: 4, padding: "10px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "inline-flex", alignItems: "center" }}>
+              ⬆ Import
+              <input type="file" accept=".json" style={{ display: "none" }} onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  try {
+                    const d = JSON.parse(ev.target.result);
+                    if (d.monthlyIncome) setIncome(d.monthlyIncome);
+                    if (d.assets) setAssets(d.assets);
+                    if (d.liabilities) setLiabilities(d.liabilities);
+                    if (d.expenses) setExpenses(d.expenses);
+                    if (d.annualBills) setAnnualBills(d.annualBills);
+                    if (d.vanguardUnits) setVanguardUnits(d.vanguardUnits);
+                    if (d.homeValue) setHomeValueState(d.homeValue);
+                    if (d.mortgageRate !== undefined) setMortgageRateState(d.mortgageRate);
+                    alert("✅ Data restored successfully! It will auto-save in a moment.");
+                  } catch (_e) {
+                    alert("❌ Invalid backup file. Please use a file exported from this dashboard.");
+                  }
+                };
+                reader.readAsText(file);
+                e.target.value = "";
+              }} />
+            </label>
           </div>
         </div>
 
