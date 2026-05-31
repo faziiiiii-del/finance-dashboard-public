@@ -72,7 +72,7 @@ function useVanguardPrice(units) {
 function useNetWorthHistory() {
   const [history, setHistory] = useState([]);
   useEffect(() => {
-    supabase.from("financial_data").select("data").eq("id", "networth_history").single()
+    supabase.from("financial_data").select("data").eq("id", DEVICE_ID + "_networth").single()
       .then(({ data }) => { if (data?.data?.history) setHistory(data.data.history); })
       .catch((_e) => {});
   }, []);
@@ -81,13 +81,13 @@ function useNetWorthHistory() {
 
 async function saveNetWorthSnapshot(netWorth, setHistory) {
   const today = new Date().toISOString().split("T")[0];
-  const { data } = await supabase.from("financial_data").select("data").eq("id", "networth_history").single().catch(() => ({ data: null }));
+  const { data } = await supabase.from("financial_data").select("data").eq("id", DEVICE_ID + "_networth").single().catch(() => ({ data: null }));
   const history = data?.data?.history || [];
   const existing = history.findIndex((h) => h.date === today);
   if (existing >= 0) history[existing].value = netWorth;
   else history.push({ date: today, value: netWorth });
   const trimmed = history.slice(-24);
-  await supabase.from("financial_data").upsert({ id: "networth_history", data: { history: trimmed }, updated_at: new Date().toISOString() });
+  await supabase.from("financial_data").upsert({ id: DEVICE_ID + "_networth", data: { history: trimmed }, updated_at: new Date().toISOString() });
   setHistory(trimmed);
 }
 
@@ -1012,6 +1012,18 @@ function getMoonPhase() {
 
 // ==================== MAIN APP ====================
 
+// Generate or retrieve a unique device ID for this user
+function getDeviceId() {
+  let id = localStorage.getItem("finance_device_id");
+  if (!id) {
+    id = "user_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem("finance_device_id", id);
+  }
+  return id;
+}
+
+const DEVICE_ID = getDeviceId();
+
 export default function App() {
   const [income, setIncome] = useState(initialData.monthlyIncome);
   const [editingIncome, setEditingIncome] = useState(false);
@@ -1030,7 +1042,7 @@ export default function App() {
 
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase.from("financial_data").select("data").eq("id", "profile").single();
+      const { data, error } = await supabase.from("financial_data").select("data").eq("id", DEVICE_ID).single();
       if (!error && data?.data && Object.keys(data.data).length > 0) {
         const d = data.data;
         if (d.monthlyIncome) setIncome(d.monthlyIncome);
@@ -1047,7 +1059,7 @@ export default function App() {
 
   const save = useCallback(async (payload) => {
     setSaveStatus("saving");
-    const { error } = await supabase.from("financial_data").upsert({ id: "profile", data: payload, updated_at: new Date().toISOString() });
+    const { error } = await supabase.from("financial_data").upsert({ id: DEVICE_ID, data: payload, updated_at: new Date().toISOString() });
     setSaveStatus(error ? "unsaved" : "saved");
   }, []);
 
