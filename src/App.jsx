@@ -262,16 +262,13 @@ function NetWorthTrendChart({ history }) {
 
 // ==================== MORTGAGE CARD ====================
 
-function MortgageCard({ liabilities, pkrRate, pkrLoading }) {
+function MortgageCard({ liabilities, pkrRate, pkrLoading, homeValue, setHomeValue, mortgageRate, setMortgageRate }) {
   const mortgage = liabilities.find((l) => l.name.toLowerCase().includes("mortgage"));
-  const mortgageBalance = mortgage?.amount || 0;
-  const [homeValue, setHomeValue] = useState(0);
-  const [mortgageRate, setMortgageRate] = useState(0);
+  const balance = mortgage?.amount || 0;
   const [editingHome, setEditingHome] = useState(false);
   const [editingRate, setEditingRate] = useState(false);
-  const [homeDraft, setHomeDraft] = useState("0");
-  const [rateDraft, setRateDraft] = useState("0");
-  const balance = mortgageBalance;
+  const [homeDraft, setHomeDraft] = useState(homeValue.toString());
+  const [rateDraft, setRateDraft] = useState(mortgageRate.toString());
   const ltv = homeValue > 0 ? ((balance / homeValue) * 100).toFixed(1) : 0;
   const equity = homeValue - balance;
   const monthlyInterest = (balance * (mortgageRate / 100)) / 12;
@@ -1066,6 +1063,8 @@ export default function App() {
   const { rate: pkrRate, loading: pkrLoading } = usePKRRate();
   const { history: nwHistory, setHistory: setNwHistory } = useNetWorthHistory();
   const [vanguardUnits, setVanguardUnits] = useState(VANGUARD_UNITS);
+  const [homeValue, setHomeValueState] = useState(0);
+  const [mortgageRate, setMortgageRateState] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -1078,6 +1077,8 @@ export default function App() {
         if (d.expenses) setExpenses(d.expenses);
         if (d.annualBills) setAnnualBills(d.annualBills);
         if (d.vanguardUnits) setVanguardUnits(d.vanguardUnits);
+        if (d.homeValue) setHomeValueState(d.homeValue);
+        if (d.mortgageRate !== undefined) setMortgageRateState(d.mortgageRate);
       }
       setLoading(false);
     }
@@ -1093,9 +1094,19 @@ export default function App() {
   useEffect(() => {
     if (loading) return;
     setSaveStatus("unsaved");
-    const t = setTimeout(() => { save({ monthlyIncome: income, assets, liabilities, expenses, annualBills, vanguardUnits }); }, 1500);
+    const t = setTimeout(() => { save({ monthlyIncome: income, assets, liabilities, expenses, annualBills, vanguardUnits, homeValue, mortgageRate }); }, 1500);
     return () => clearTimeout(t);
-  }, [income, assets, liabilities, expenses, annualBills, vanguardUnits, loading, save]);
+  }, [income, assets, liabilities, expenses, annualBills, vanguardUnits, homeValue, mortgageRate, loading, save]);
+
+  const setHomeValue = (val) => {
+    setHomeValueState(val);
+    setAssets(prev => prev.map(a =>
+      a.name.toLowerCase().includes("home") || a.name.toLowerCase().includes("property")
+        ? { ...a, amount: val } : a
+    ));
+  };
+
+  const setMortgageRate = (val) => setMortgageRateState(val);
 
   const totalAssets = useMemo(() => assets.reduce((s, a) => s + a.amount, 0), [assets]);
   const totalLiabilities = useMemo(() => liabilities.reduce((s, a) => s + a.amount, 0), [liabilities]);
@@ -1253,7 +1264,7 @@ export default function App() {
               <StatCard label="Loans" value={fmt(liabilities.filter((l) => l.name.toLowerCase().includes("loan")).reduce((s, l) => s + l.amount, 0))} sub={<PKRBadge gbp={liabilities.filter((l) => l.name.toLowerCase().includes("loan")).reduce((s, l) => s + l.amount, 0)} rate={pkrRate} loading={pkrLoading} />} color="#fbbf24" />
               <StatCard label="Credit" value={fmt(liabilities.filter((l) => l.name.toLowerCase().includes("credit") || l.name.toLowerCase().includes("flex")).reduce((s, l) => s + l.amount, 0))} sub={<PKRBadge gbp={liabilities.filter((l) => l.name.toLowerCase().includes("credit") || l.name.toLowerCase().includes("flex")).reduce((s, l) => s + l.amount, 0)} rate={pkrRate} loading={pkrLoading} />} color="#f43f5e" />
             </div>
-            <MortgageCard liabilities={liabilities} pkrRate={pkrRate} pkrLoading={pkrLoading} />
+            <MortgageCard liabilities={liabilities} pkrRate={pkrRate} pkrLoading={pkrLoading} homeValue={homeValue} setHomeValue={setHomeValue} mortgageRate={mortgageRate} setMortgageRate={setMortgageRate} />
             <SectionTable title="Liabilities" items={liabilities} setItems={setLiabilities}
               fields={[{ key: "name", label: "Liability" }, { key: "amount", label: "Amount (£)" }]}
               addLabel="+ Add Liability" newItem={() => ({ name: "", amount: 0 })} color="#f87171" />
