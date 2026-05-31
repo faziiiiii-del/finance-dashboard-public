@@ -1245,8 +1245,8 @@ export default function App() {
           <>
             <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
               <StatCard label="Total Assets" value={fmt(totalAssets)} color="#34d399" big sub={<PKRBadge gbp={totalAssets} rate={pkrRate} loading={pkrLoading} />} />
-              <StatCard label="Property" value={fmt(assets.filter((a) => a.name.toLowerCase().includes("home")).reduce((s, a) => s + a.amount, 0))} sub={<PKRBadge gbp={assets.filter((a) => a.name.toLowerCase().includes("home")).reduce((s, a) => s + a.amount, 0)} rate={pkrRate} loading={pkrLoading} />} color="#60a5fa" />
-              <StatCard label="Cash" value={fmt(assets.filter((a) => a.name.toLowerCase().includes("account")).reduce((s, a) => s + a.amount, 0))} sub={<PKRBadge gbp={assets.filter((a) => a.name.toLowerCase().includes("account")).reduce((s, a) => s + a.amount, 0)} rate={pkrRate} loading={pkrLoading} />} color="#fbbf24" />
+              <StatCard label="Property" value={fmt(homeValue)} sub={<PKRBadge gbp={homeValue} rate={pkrRate} loading={pkrLoading} />} color="#60a5fa" />
+              <StatCard label="Cash" value={fmt(readyCash)} sub={<PKRBadge gbp={readyCash} rate={pkrRate} loading={pkrLoading} />} color="#fbbf24" />
               <StatCard label="Investments" value={fmt(assets.filter((a) => a.name.toLowerCase().includes("vanguard") || a.name.toLowerCase().includes("global") || a.name.toLowerCase().includes("ftse")).reduce((s, a) => s + a.amount, 0))} sub={<PKRBadge gbp={assets.filter((a) => a.name.toLowerCase().includes("vanguard") || a.name.toLowerCase().includes("global") || a.name.toLowerCase().includes("ftse")).reduce((s, a) => s + a.amount, 0)} rate={pkrRate} loading={pkrLoading} />} color="#c084fc" />
             </div>
             <VanguardCard pkrRate={pkrRate} pkrLoading={pkrLoading} units={vanguardUnits} setUnits={setVanguardUnits} onSaveUnits={(n) => save({ monthlyIncome: income, assets, liabilities, expenses, annualBills, vanguardUnits: n })} />
